@@ -3,7 +3,6 @@
 # Usage: ./check_loc.sh <base_ref> <head_ref> <threshold>
 
 set -e
-set -x  # Print each command as it runs
 
 if [ "$#" -ne 3 ]; then
   echo "Usage: $0 <base_ref> <head_ref> <threshold>"
@@ -13,12 +12,6 @@ fi
 BASE_REF="$1"
 HEAD_REF="$2"
 THRESHOLD="$3"
-
-# Debug: print the SHAs and check if they exist
-echo "BASE_REF: $BASE_REF"
-echo "HEAD_REF: $HEAD_REF"
-git cat-file -e "$BASE_REF" || { echo "Base SHA $BASE_REF not found"; exit 1; }
-git cat-file -e "$HEAD_REF" || { echo "Head SHA $HEAD_REF not found"; exit 1; }
 
 # Get per-file added/deleted lines
 mapfile -t DIFF_LINES < <(git diff --numstat "$BASE_REF" "$HEAD_REF")
