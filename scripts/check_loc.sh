@@ -41,11 +41,11 @@ for LINE in "${DIFF_LINES[@]}"; do
   CODE=0; COMMENT=0; BLANK=0
   while IFS= read -r l; do
     if [[ "$l" =~ ^[[:space:]]*$ ]]; then
-      ((BLANK++))
+      ((BLANK++)) || true
     elif [[ "$l" =~ ^[[:space:]]*# ]]; then
-      ((COMMENT++))
+      ((COMMENT++)) || true
     else
-      ((CODE++))
+      ((CODE++)) || true
     fi
   done <<< "$ADDED_LINES"
 
