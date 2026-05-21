@@ -23,7 +23,7 @@ jobs:
           chmod +x ./scripts/check_loc.sh
           
           BASE_REF="origin/${{ github.base_ref }}"
-          HEAD_REF="sha256-${{ github.event.pull_request.head.sha }}"
+          HEAD_REF="${{ github.event.pull_request.head.sha }}"
           
           # Set your threshold here (e.g., 500 lines)
           THRESHOLD=500
