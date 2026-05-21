@@ -13,14 +13,12 @@ BASE_REF="$1"
 HEAD_REF="$2"
 THRESHOLD="$3"
 
+
 # Get per-file added/deleted lines
 mapfile -t DIFF_LINES < <(git diff --numstat "$BASE_REF" "$HEAD_REF")
 
 TOTAL_ADDED=0
 TOTAL_DELETED=0
-TOTAL_CODE=0
-TOTAL_COMMENT=0
-TOTAL_BLANK=0
 declare -a FILE_REPORTS
 
 for LINE in "${DIFF_LINES[@]}"; do
@@ -32,7 +30,8 @@ for LINE in "${DIFF_LINES[@]}"; do
   # Get added lines for this file
   ADDED_LINES=$(git diff "$BASE_REF" "$HEAD_REF" -- "$FILE" | grep '^+' | grep -v '^+++' | cut -c2-)
   CODE=0; COMMENT=0; BLANK=0
-  while IFS= read -r l; do
+  
+  while IFS= read -r l || [ -n "$l" ]; do
     if [[ "$l" =~ ^[[:space:]]*$ ]]; then
       ((BLANK++)) || true
     elif [[ "$l" =~ ^[[:space:]]*# ]]; then
@@ -43,12 +42,9 @@ for LINE in "${DIFF_LINES[@]}"; do
   done <<< "$ADDED_LINES"
 
   NET=$((ADDED - DELETED))
-  FILE_REPORTS+=("$(printf '%7s %9s %6s %6s %8s  | %s' "+$ADDED" "-$DELETED" "$( ((NET>=0)) && echo +$NET || echo $NET )" "$CODE" "$COMMENT" "$FILE")")
+  FILE_REPORTS+=("$(printf '%7s %9s %6s %6s %8s %6s  | %s' "+$ADDED" "-$DELETED" "$( ((NET>=0)) && echo +$NET || echo $NET )" "$CODE" "$COMMENT" "$BLANK" "$FILE")")
   TOTAL_ADDED=$((TOTAL_ADDED + ADDED))
   TOTAL_DELETED=$((TOTAL_DELETED + DELETED))
-  TOTAL_CODE=$((TOTAL_CODE + CODE))
-  TOTAL_COMMENT=$((TOTAL_COMMENT + COMMENT))
-  TOTAL_BLANK=$((TOTAL_BLANK + BLANK))
 done
 
 NET_CHANGE=$((TOTAL_ADDED - TOTAL_DELETED))
@@ -62,14 +58,10 @@ echo "  Files changed  : ${#FILE_REPORTS[@]}"
 echo "  Lines added    : +$TOTAL_ADDED"
 echo "  Lines deleted  : -$TOTAL_DELETED"
 echo "  Net change     : $SIGN$NET_CHANGE"
-echo "  ---"
-echo "  Added code     : $TOTAL_CODE"
-echo "  Added comments : $TOTAL_COMMENT"
-echo "  Added blanks   : $TOTAL_BLANK"
 echo "  Threshold      : $THRESHOLD"
 echo "============================================================"
 echo
-printf "   Added  Deleted    Net   Code  Comment  | File\n"
+printf "    Added  Deleted    Net   Code  Comment  Blank | File\n"
 echo "  ----------------------------------------------------------"
 for REPORT in "${FILE_REPORTS[@]}"; do
   echo "  $REPORT"
@@ -85,4 +77,3 @@ else
   echo "  Consider splitting this PR into smaller changes."
   exit 1
 fi
- 
