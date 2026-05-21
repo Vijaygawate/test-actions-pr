@@ -1,0 +1,32 @@
+name: PR Lines of Code Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-loc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          # Crucial: Fetch all history so git can see the merge base / PR branch history
+          fetch-depth: 0
+
+      - name: Run LOC Checker Script
+        run: |
+          # Make the script executable just in case
+          chmod +x ./scripts/check_loc.sh
+          
+          BASE_REF="origin/${{ github.base_ref }}"
+          HEAD_REF="sha256-${{ github.event.pull_request.head.sha }}"
+          
+          # Set your threshold here (e.g., 500 lines)
+          THRESHOLD=500
+          
+          # Execute the script
+          ./scripts/check_loc.sh "$BASE_REF" "$HEAD_REF" "$THRESHOLD"
